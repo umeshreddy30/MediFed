@@ -1,0 +1,41 @@
+
+services:
+  server:
+    build: .
+    command: -u src/server.py  # -u forces unbuffered stdout (logs appear instantly)
+    ports:
+      - "8080:8080"
+    volumes:
+      # OLD:
+      # - ./models:/app/models
+
+      # NEW (Force it to map the current folder):
+      - ${PWD}/models:/app/models
+    networks:
+      - fed-net
+
+  hospital_a:
+    build: .
+    command: -u src/client.py
+    environment:
+      - CLIENT_ID=0
+    depends_on:
+      - server
+    networks:
+      - fed-net
+    restart: always  # Restart if server isn't ready yet
+
+  hospital_b:
+    build: .
+    command: -u src/client.py
+    environment:
+      - CLIENT_ID=1
+    depends_on:
+      - server
+    networks:
+      - fed-net
+    restart: always
+
+networks:
+  fed-net:
+    driver: bridge
